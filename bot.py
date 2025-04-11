@@ -38,6 +38,8 @@ def get_trending_data():
         res.raise_for_status()
         soup = BeautifulSoup(res.text, "html.parser")
         boxes = soup.select("#highlightsBox > div.highlights-box.w-100.my-2 > div")
+        print("[CRAWL] box 개수:", len(boxes))
+
 
         coin_list = []
         for box in boxes:
