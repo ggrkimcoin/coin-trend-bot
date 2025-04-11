@@ -8,7 +8,6 @@ from bs4 import BeautifulSoup
 from flask import Flask
 import threading
 
-# 환경변수
 API_KEY = os.getenv("API_KEY")
 CHAT_ID = os.getenv("CHAT_ID")
 
@@ -18,7 +17,7 @@ print("[INIT] CHAT_ID:", CHAT_ID)
 bot = telegram.Bot(token=API_KEY)
 last_result = None
 
-# Flask 서버 (포트 감지용)
+# Flask for Render
 app = Flask(__name__)
 
 @app.route('/')
@@ -26,20 +25,17 @@ def index():
     return "Bot is running!"
 
 def run_flask():
-    print("[FLASK] Starting Flask server on port 10000")
-    app.run(host='0.0.0.0', port=10000)
+    print("[FLASK] Flask server on port 10000")
+    app.run(host="0.0.0.0", port=10000)
 
-# 트렌드 크롤링 함수
+# 크롤링 함수
 def get_trending_data():
     print("[CRAWL] get_trending_data() 시작")
     try:
         url = "https://www.coincarp.com/"
-        headers = {
-            "User-Agent": "Mozilla/5.0"
-        }
+        headers = {"User-Agent": "Mozilla/5.0"}
         res = requests.get(url, headers=headers, timeout=10)
         res.raise_for_status()
-
         soup = BeautifulSoup(res.text, "html.parser")
         boxes = soup.select("#highlightsBox > div.highlights-box.w-100.my-2 > div")
 
@@ -59,17 +55,16 @@ def get_trending_data():
 
     except Exception as e:
         traceback.print_exc()
-        print(f"[ERROR][CRAWL] {e}")
+        print(f"[ERROR] {e}")
         return []
 
-# 포맷
 def format_trending(coin_list):
     return "\n".join([f"[{i+1}] {name} ({symbol}) - {percent}" for i, (name, symbol, percent) in enumerate(coin_list)])
 
-# 알림 함수
 async def check_and_notify():
     global last_result
     print("[DEBUG] check_and_notify() 시작")
+
     try:
         current_full = get_trending_data()
         if not current_full:
@@ -94,7 +89,6 @@ async def check_and_notify():
         traceback.print_exc()
         print(f"[ERROR][NOTIFY] {e}")
 
-# 메인 루프
 async def main_loop():
     while True:
         print("[LOOP] ===== 시작 =====")
@@ -102,7 +96,7 @@ async def main_loop():
         print("[LOOP] ===== 종료 =====")
         await asyncio.sleep(60)
 
-# 실행
+# ✅ 여기가 핵심!
 if __name__ == "__main__":
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.daemon = True
