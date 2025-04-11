@@ -32,7 +32,9 @@ def run_flask():
 # === CoinGecko 트렌딩 API로부터 데이터 가져오기 ===
 def get_trending_from_api():
     url = "https://api.coingecko.com/api/v3/search/trending"
+    print("[DEBUG] CoinGecko 요청 시작")
     res = requests.get(url, timeout=10)
+    print("[DEBUG] 응답 수신 완료")
     res.raise_for_status()
     data = res.json()
     trending = data.get("coins", [])
@@ -48,27 +50,29 @@ async def check_and_notify():
     print("[DEBUG] check_and_notify() 시작")
     try:
         current_list = get_trending_from_api()
-        if not current_list:
-            print("[WARN] 트렌딩 데이터 없음")
-            return
+        current_key_only = [(name, symbol) for _, name, symbol in current_list]
 
         if last_result is None:
             print("[INFO] 봇 시작됨. 트렌드 저장만 함.")
-            last_result = current_list
+            last_result = current_key_only
             return
 
-        if current_list != last_result:
+        if current_key_only != last_result:
             formatted = format_trending(current_list)
             print("[INFO] 트렌드 변경 감지. 메시지 전송 중")
+            print("[DEBUG] 메시지 전송 시도 중")
             await bot.send_message(chat_id=CHAT_ID, text=f"📈 CoinGecko 트렌드 변경 감지!\n\n{formatted}")
-            last_result = current_list
+            print("[DEBUG] 메시지 전송 완료")
+            last_result = current_key_only
         else:
             print("[INFO] 트렌드 동일. 메시지 생략.")
 
     except Exception as e:
-        print(f"[ERROR] {e}")
-    print("[DEBUG] check_and_notify() 완료")
+        import traceback
+        print("[ERROR] 예외 발생:")
+        traceback.print_exc()
 
+    print("[DEBUG] check_and_notify() 완료")
 
 # === 메인 루프 ===
 async def main_loop():
@@ -79,7 +83,6 @@ async def main_loop():
         print("[DEBUG] sleep 시작")
         await asyncio.sleep(60)
         print("[DEBUG] sleep 종료 → 다음 루프 시작 예정")
-
 
 # === 실행 ===
 if __name__ == "__main__":
