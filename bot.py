@@ -4,10 +4,10 @@ import os
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 from flask import Flask
 import threading
 
@@ -21,7 +21,7 @@ print("CHAT_ID:", CHAT_ID)
 bot = telegram.Bot(token=API_KEY)
 last_result = None
 
-# Flask 앱 설정 (Render가 포트 감지할 수 있도록)
+# Flask 앱 (Render가 포트를 감지하기 위해 필요)
 app = Flask(__name__)
 
 @app.route('/')
@@ -31,15 +31,14 @@ def index():
 def run_flask():
     app.run(host='0.0.0.0', port=10000)
 
-# 크롤링 함수
+# 코인 트렌드 크롤링
 def get_trending_data():
-    options = webdriver.ChromeOptions()
+    options = FirefoxOptions()
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--log-level=3')
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    driver = webdriver.Firefox(service=FirefoxService(), options=options)
     driver.get("https://www.coincarp.com/")
 
     WebDriverWait(driver, 10).until(
