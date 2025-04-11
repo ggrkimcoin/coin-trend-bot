@@ -67,6 +67,8 @@ async def check_and_notify():
 
     except Exception as e:
         print(f"[ERROR] {e}")
+    print("[DEBUG] check_and_notify() 완료")
+
 
 # === 메인 루프 ===
 async def main_loop():
@@ -74,7 +76,10 @@ async def main_loop():
         print("[LOOP] ===== 시작 =====")
         await check_and_notify()
         print("[LOOP] ===== 대기 중 =====")
+        print("[DEBUG] sleep 시작")
         await asyncio.sleep(60)
+        print("[DEBUG] sleep 종료 → 다음 루프 시작 예정")
+
 
 # === 실행 ===
 if __name__ == "__main__":
