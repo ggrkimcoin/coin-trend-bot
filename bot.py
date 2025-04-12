@@ -19,7 +19,7 @@ print("[INIT] LOG_CHAT_ID:", LOG_CHAT_ID)
 
 bot = telegram.Bot(token=API_KEY)
 
-# === Flask 앱 설정 (슬립 방지용) ===
+# === Flask 앱 설정 ===
 app = Flask(__name__)
 
 @app.route('/')
@@ -41,25 +41,30 @@ def get_trending():
     data = res.json()
     return [(i+1, coin["item"]["name"], coin["item"]["symbol"]) for i, coin in enumerate(data.get("coins", []))]
 
-# === 변경 항목 비교 및 전체 + 변경 요약 메시지 생성 ===
-def format_full_and_diff(current, prev):
+# === 전체 메시지 + 변화 메시지 생성 ===
+def format_with_rank_change(current, prev):
     full_lines = []
     diff_lines = []
 
-    for i, (rank, name, symbol) in enumerate(current):
+    current_dict = {(name, symbol): rank for rank, name, symbol in current}
+    prev_dict = {(name, symbol): rank for rank, name, symbol in prev} if prev else {}
+
+    for rank, name, symbol in current:
         full_lines.append(f"[{rank}] {name} ({symbol})")
-        if prev and i < len(prev) and (name, symbol) != (prev[i][1], prev[i][2]):
-            diff_lines.append(f"- [{rank}] {name} ({symbol})")
+
+        old_rank = prev_dict.get((name, symbol))
+        if old_rank is not None and old_rank != rank:
+            diff_lines.append(f"- {name} ({symbol}): #{old_rank} → #{rank}")
+        elif old_rank is None:
+            diff_lines.append(f"- {name} ({symbol}): 신규 진입")
 
     full_text = "\n".join(full_lines)
-    diff_text = "\n".join(diff_lines)
+    if diff_lines:
+        full_text += "\n\n🆕 변경된 항목:\n" + "\n".join(diff_lines)
 
-    if diff_text:
-        return f"{full_text}\n\n🆕 변경된 항목:\n{diff_text}"
-    else:
-        return full_text
+    return full_text
 
-# === 메시지 전송 함수 ===
+# === 메시지 전송 ===
 def send_message_all(message, is_change=True):
     try:
         if is_change:
@@ -71,7 +76,7 @@ def send_message_all(message, is_change=True):
         print("[ERROR] 메시지 전송 실패:")
         print(e)
 
-# === 메인 반복 로직 ===
+# === 루프 ===
 def main_loop():
     global last_list
     while True:
@@ -80,11 +85,11 @@ def main_loop():
             current = get_trending()
             if last_list is None or current != last_list:
                 print("[INFO] 트렌드 변경 감지")
-                msg = format_full_and_diff(current, last_list)
+                msg = format_with_rank_change(current, last_list)
                 last_list = current
                 send_message_all(msg, is_change=True)
             else:
-                print("[INFO] 트렌드 동일 → 조용히 로그만 전송")
+                print("[INFO] 트렌드 동일 → 로그만 전송")
                 send_message_all("", is_change=False)
         except Exception as e:
             print("[ERROR] 루프 예외 발생:")
