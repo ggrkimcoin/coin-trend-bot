@@ -10,14 +10,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 API_KEY = os.getenv("API_KEY")
-CHAT_ID = int(os.getenv("CHAT_ID"))
 ALERT_CHAT_ID = int(os.getenv("ALERT_CHAT_ID"))
 LOG_CHAT_ID = int(os.getenv("LOG_CHAT_ID"))
 
 print("[INIT] API_KEY:", API_KEY)
-print("[INIT] CHAT_ID:", CHAT_ID)
+#print("[INIT] CHAT_ID:", CHAT_ID)
 print("[INIT] ALERT_CHAT_ID:", ALERT_CHAT_ID)
 print("[INIT] LOG_CHAT_ID:", LOG_CHAT_ID)
+
 
 bot = telegram.Bot(token=API_KEY)
 
@@ -48,7 +48,7 @@ def format_trending_with_diff(current, prev):
     lines = []
     for i, (rank, name, symbol) in enumerate(current):
         if prev and i < len(prev) and (name, symbol) != (prev[i][1], prev[i][2]):
-            line = f"[{rank}] **{name} ({symbol})**"
+            line = f"[{rank}] 🔁 *{name} ({symbol})*"
         else:
             line = f"[{rank}] {name} ({symbol})"
         lines.append(line)
@@ -60,10 +60,10 @@ def send_message_all(message, is_change=True):
         if is_change:
             bot.send_message(chat_id=ALERT_CHAT_ID, text=f"#ALERT\n📈 CoinGecko 트렌드 변경!\n\n{message}", parse_mode="Markdown")
             bot.send_message(chat_id=LOG_CHAT_ID, text=f"(Changed)\n\n{message}", parse_mode="Markdown")
-            bot.send_message(chat_id=CHAT_ID, text=f"[ALERT COPY]\n\n{message}", parse_mode="Markdown")
+            #bot.send_message(chat_id=CHAT_ID, text=f"[ALERT COPY]\n\n{message}", parse_mode="Markdown")
         else:
             bot.send_message(chat_id=LOG_CHAT_ID, text="(No Change) 트렌드 동일. 변화 없음.")
-            bot.send_message(chat_id=CHAT_ID, text="(No Change) 개인 알림 백업")
+            #bot.send_message(chat_id=CHAT_ID, text="(No Change) 개인 알림 백업")
     except Exception as e:
         print("[ERROR] 메시지 전송 실패:")
         print(e)
